@@ -35,8 +35,8 @@ func TestSyncGitopsCmd(t *testing.T) {
 	runGitCmdInCmdTest(t, remoteDir, "commit", "-m", "Initial commit")
 
 	destFolder := filepath.Join(t.TempDir(), "cmd-dest")
-	viper.Set("gitops_url", remoteDir)
-	viper.Set("gitops_folder", destFolder)
+	viper.Set("profiles.default.gitops_url", remoteDir)
+	viper.Set("profiles.default.gitops_folder", destFolder)
 
 	// Execute command via rootCmd
 	rootCmd.SetArgs([]string{"syncGitops"})
@@ -47,5 +47,15 @@ func TestSyncGitopsCmd(t *testing.T) {
 	copiedFile := filepath.Join(destFolder, "test.txt")
 	if _, err := os.Stat(copiedFile); err != nil {
 		t.Fatalf("expected file %s does not exist after syncGitops: %v", copiedFile, err)
+	}
+}
+
+func TestSyncGitopsCmd_MissingConfig(t *testing.T) {
+	viper.Set("profiles.default.gitops_url", "")
+	viper.Set("profiles.default.gitops_folder", "")
+
+	rootCmd.SetArgs([]string{"syncGitops"})
+	if err := rootCmd.Execute(); err == nil {
+		t.Fatal("expected error when config is missing, got nil")
 	}
 }

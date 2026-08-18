@@ -26,6 +26,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"nexus-sds.com/kpctl/pkg/platform"
+	"nexus-sds.com/kpctl/pkg/sysConfig"
 )
 
 // syncGitopsCmd represents the syncGitops command
@@ -36,7 +37,8 @@ var syncGitopsCmd = &cobra.Command{
 	Long: `Sync from the git repository defined with the viper config key 'gitops_url'
 into the folder defined with the viper config key 'gitops_folder', creating the folder if it does not exist.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if err := platform.SyncGitops(); err != nil {
+		profile := sysConfig.GetActiveProfile()
+		if err := platform.SyncGitopsRepository(profile.GitopsURL, profile.GitopsFolder); err != nil {
 			return fmt.Errorf("gitops sync failed: %w", err)
 		}
 		fmt.Println("GitOps repository synced successfully.")

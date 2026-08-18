@@ -30,10 +30,21 @@ func GetAvailableContexts() []string {
 	return contextNames
 }
 func GetK8SPlatformRestConfig() *rest.Config {
+	return GetK8SPlatformRestConfigForContext("")
+}
+
+// GetK8SPlatformRestConfigForContext builds a REST config using the named
+// kubeconfig context. An empty contextName falls back to kubeconfig's
+// current-context.
+func GetK8SPlatformRestConfigForContext(contextName string) *rest.Config {
 	rules := clientcmd.NewDefaultClientConfigLoadingRules()
+	overrides := &clientcmd.ConfigOverrides{}
+	if contextName != "" {
+		overrides.CurrentContext = contextName
+	}
 	config, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		rules,
-		&clientcmd.ConfigOverrides{},
+		overrides,
 	).ClientConfig()
 	if err != nil {
 		panic(err)

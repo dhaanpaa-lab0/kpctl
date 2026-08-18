@@ -5,8 +5,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"testing"
-
-	"github.com/spf13/viper"
 )
 
 func runGitCmd(t *testing.T, dir string, args ...string) {
@@ -99,33 +97,5 @@ func TestSyncGitopsRepository_TildePath(t *testing.T) {
 	expectedPath := filepath.Join(tempHome, "my-gitops-folder", "nested", "README.md")
 	if _, err := os.Stat(expectedPath); err != nil {
 		t.Fatalf("expected file %s does not exist: %v", expectedPath, err)
-	}
-}
-
-func TestSyncGitops_WithViperConfig(t *testing.T) {
-	remoteDir := setupTestRemoteRepo(t)
-	destFolder := filepath.Join(t.TempDir(), "viper-gitops")
-
-	viper.Set("gitops_url", remoteDir)
-	viper.Set("gitops_folder", destFolder)
-
-	err := SyncGitops()
-	if err != nil {
-		t.Fatalf("SyncGitops failed: %v", err)
-	}
-
-	readmePath := filepath.Join(destFolder, "README.md")
-	if _, err := os.Stat(readmePath); err != nil {
-		t.Fatalf("expected file %s does not exist: %v", readmePath, err)
-	}
-}
-
-func TestSyncGitops_MissingConfig(t *testing.T) {
-	viper.Set("gitops_url", "")
-	viper.Set("gitops_folder", "")
-
-	err := SyncGitops()
-	if err == nil {
-		t.Fatal("expected error when config is missing, got nil")
 	}
 }

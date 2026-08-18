@@ -23,6 +23,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+	"nexus-sds.com/kpctl/pkg/helpers"
 	"nexus-sds.com/kpctl/pkg/platform"
 	"nexus-sds.com/kpctl/pkg/sysConfig"
 )
@@ -33,11 +34,14 @@ var initConfigCmd = &cobra.Command{
 	Short: "Setup or update K8S On Demand processing CLI",
 	Long:  `Setup the initial configuration for K8S On Demand processing CLI`,
 	Run: func(cmd *cobra.Command, args []string) {
-		sysConfig.SetConfigValuePromptedSelect("k8s_context", "K8S Context to use", platform.GetAvailableContexts())
-		sysConfig.SetConfigValuePromptedSelect("k8s_cluster_ns", "K8S Cluster Namespace", platform.GetNamespaces())
-		sysConfig.SetConfigValuePrompted("gitops_url", "GitOps URL to use", "^")
-		sysConfig.SetConfigValuePrompted("gitops_folder", "GitOps Folder to use", "^")
+		profileName := helpers.GetInputAsString("Profile name to configure", sysConfig.GetActiveProfileName())
 
+		sysConfig.SetProfileValuePromptedSelect(profileName, "k8s_context", "K8S Context to use", platform.GetAvailableContexts())
+		sysConfig.SetProfileValuePromptedSelect(profileName, "k8s_cluster_ns", "K8S Cluster Namespace", platform.GetNamespaces())
+		sysConfig.SetProfileValuePrompted(profileName, "gitops_url", "GitOps URL to use", "^")
+		sysConfig.SetProfileValuePrompted(profileName, "gitops_folder", "GitOps Folder to use", "^")
+
+		sysConfig.SetActiveProfileName(profileName)
 		sysConfig.UpdateGlobalConfig()
 	},
 }

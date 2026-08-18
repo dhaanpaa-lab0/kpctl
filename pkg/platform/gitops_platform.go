@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"nexus-sds.com/kpctl/pkg/core"
-	"nexus-sds.com/kpctl/pkg/sysConfig"
 )
 
 // SyncGitopsRepository synchronizes the git repository from gitopsURL to gitopsFolder.
@@ -86,11 +85,4 @@ func SyncGitopsRepository(gitopsURL, gitopsFolder string) error {
 	}
 
 	return nil
-}
-
-// SyncGitops uses the viper configuration keys 'gitops_url' and 'gitops_folder' to sync.
-func SyncGitops() error {
-	gitopsURL := sysConfig.GetConfigValueFromString("gitops_url")
-	gitopsFolder := sysConfig.GetConfigValueFromString("gitops_folder")
-	return SyncGitopsRepository(gitopsURL, gitopsFolder)
 }

@@ -1,20 +1,18 @@
 package sysConfig
 
 import (
+	"errors"
 	"fmt"
+	"log"
 
 	"github.com/spf13/viper"
-	"nexus-sds.com/kpctl/pkg/helpers"
+	"nexus-sds.com/kpctl/pkg/platform"
 )
 
 func AddGlobalsConfigMapValue(key string, value string) {
 	globals := viper.GetStringMapString("globals")
 	globals[key] = value
 	viper.Set("globals", globals)
-}
-
-func SetConfigValueFromString(key string, value string) {
-	viper.Set(key, value)
 }
 
 func GetConfigValueFromMap(key string) string {
@@ -26,23 +24,6 @@ func GetGlobalsConfigMap() map[string]string {
 	return viper.GetStringMapString("globals")
 }
 
-func GetConfigValueFromString(key string) string {
-	return viper.GetString(key)
-}
-
-func SetConfigValuePrompted(key string, prompt string, defaultValue string) {
-	if defaultValue == "^" {
-		defaultValue = GetConfigValueFromString(key)
-	}
-	v := helpers.GetInputAsString(prompt, defaultValue)
-	viper.Set(key, v)
-}
-
-func SetConfigValuePromptedSelect(key string, prompt string, options []string) {
-	selectedOption := helpers.SelectOptionAsString(prompt, options)
-	viper.Set(key, selectedOption)
-}
-
 func DeleteGlobalConfigMapValue(key string) {
 	globals := viper.GetStringMapString("globals")
 	delete(globals, key)
@@ -51,8 +32,25 @@ func DeleteGlobalConfigMapValue(key string) {
 
 func UpdateGlobalConfig() {
 	errWritingConfig := viper.WriteConfig()
+	var configFileNotFoundError viper.ConfigFileNotFoundError
+
 	if errWritingConfig != nil {
-		fmt.Println("Error writing config:", errWritingConfig)
+		if errors.As(errWritingConfig, &configFileNotFoundError) {
+			configPath := platform.GetConfigFolderFileName("config.yaml")
+			fmt.Printf("Config not found. Creating default at: %s\n", configPath)
+
+			if writeErr := viper.WriteConfigAs(configPath); writeErr != nil {
+				log.Fatalf("Failed to write initial config: %v", writeErr)
+			}
+		} else {
+			// Real syntax or permission error found during loading
+			log.Fatalf("Error writing config file: %v", errWritingConfig)
+		}
+
 		return
+	}
+
+	if errStrippingLegacyFields := stripLegacyProfileFields(viper.ConfigFileUsed()); errStrippingLegacyFields != nil {
+		fmt.Println("Error cleaning up legacy config fields:", errStrippingLegacyFields)
 	}
 }

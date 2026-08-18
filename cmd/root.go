@@ -27,6 +27,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"nexus-sds.com/kpctl/pkg/platform"
+	"nexus-sds.com/kpctl/pkg/sysConfig"
 )
 
 var cfgFile string
@@ -70,14 +72,12 @@ func initConfig() {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// Find home directory.
-		home, err := os.UserHomeDir()
-		cobra.CheckErr(err)
-
+		// Get Config Folder
+		configPath := platform.GetConfigFolder()
 		// Search config in home directory with name ".kpctl" (without extension).
-		viper.AddConfigPath(home)
+		viper.AddConfigPath(configPath)
 		viper.SetConfigType("yaml")
-		viper.SetConfigName(".kpctl")
+		viper.SetConfigName("config")
 
 	}
 
@@ -87,4 +87,6 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 	}
+
+	sysConfig.MigrateLegacyProfileConfig()
 }
